@@ -1,0 +1,2 @@
+class SJApi:
+    pass
