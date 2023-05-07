@@ -3,9 +3,7 @@ import json
 
 
 class HHApi:
-    hh_api = 'https://api.hh.ru/vacancies'
-    def __init__(self):
-        self.text =''
+
     @staticmethod
     def get_vacancies(text):
         req = requests.get('https://api.hh.ru/vacancies', {'text': text})
