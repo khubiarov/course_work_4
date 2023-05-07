@@ -31,9 +31,13 @@ class HHApi(ReqFromApi):
 
     def make_file(self):
         result = self.get_vacancies()
-        with open('result_log.csv','a',encoding='utf-8') as file:
+        with open(f'{self.file_name}', 'w', encoding='utf-8') as file:
+            file_writer = csv.writer(file, delimiter=",", lineterminator="\r")
             for point in result:
-                file.write(point["name"])
+                file_writer.writerow([point.get('name'), point.get('area').get('name'), point.get('salary'),
+
+                                      point.get('apply_alternate_url')])
+
     def get_vacancies(self):
         req = requests.get('https://api.hh.ru/vacancies', {'text': self.name_vacancies})
         data = req.content.decode()  # спер из одного мануала
@@ -45,7 +49,6 @@ class HHApi(ReqFromApi):
         items_list = []
 
         for item in data['items']:
-
             items_list.append(item)
         return items_list
 
@@ -55,9 +58,17 @@ class SJApi(ReqFromApi):
 
 
 usr_inp = ''
-while usr_inp != 'quit':
-    print('введите профессию:\n')
+while True:
+    print('Какую профессию ищем:\nquit - выйти')
     usr_inp = input()
-    copy = HHApi("log.txt", usr_inp)
-    print(copy.get_vacancies())
+    if usr_inp == 'quit'.lower():
+        break
+    copy = HHApi(f"{input('Имя файла лога')}.csv", usr_inp)
+    copy.get_vacancies()
     copy.make_file()
+    usr_inp = input('На экран выведем? Y/N').lower()
+    if usr_inp == 'N':
+        print('До свидания!')
+        break
+    elif usr_inp == 'Y':
+        print(copy.get_vacancies())
