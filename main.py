@@ -34,6 +34,9 @@ class CopyofVacancy(ABC):
         self.city = city
         self.salary_from = salary_from
         self.salary_to = salary_to
+
+    def __str__(self):
+        return f'{self.number} {self.profession} {self.city} {self.salary_from} {self.salary_to}'
     ###@classmethod
     ###def get_copy(cls):
     ###    return cls(copy.make_copy())
@@ -81,9 +84,10 @@ class HHApi(ReqFromApi):
             for line in content:
                 self.i += 1
                 all_vacancies_copyes.append(CopyofVacancy(self.i, line[0], line[1], line[2], line[3]))
-                print(f"{line[0]}; {line[1]};от {line[2]} до {line[3]} ")
+                print(f"{self.i}) {line[0]}; {line[1]};от {line[2]} до {line[3]} ")
                 if self.i == 10:
-                    input('Дальше? (press any key)')
+                    numb_of_vacancy = int(input('Какую вакансию показать подробнее?\nДальше?"N"'))
+                    print(all_vacancies_copyes[numb_of_vacancy-1])
 class SJApi(ReqFromApi):
     pass
 all_vacancies_copyes = []
