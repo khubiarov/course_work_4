@@ -53,15 +53,16 @@ class HHApi(ReqFromApi):
         with open(f'{self.file_name}', 'w', encoding='utf-8') as file:
             file_writer = csv.writer(file, delimiter=",", lineterminator="\r")
             for point in result:
+                if point.get('salary') is None:
+                    salary_from = '--'
+                    salary_to = '--'
+                else:
+                    salary_from = point.get('salary').get('from')
+                    salary_to = point.get('salary').get('to')
 
-                if point.get('salary').get('from') is None:
-                    point['salary']['from'] = '--'
+                file_writer.writerow([point.get('name'), point.get('area').get('name'), salary_from,
 
-                if point.get('salary').get('to') is None:
-                    point['salary']['to'] = '--'
-                file_writer.writerow([point.get('name'), point.get('area').get('name'), point.get('salary').get('from'),
-
-                                      point.get('salary').get('to'), point.get('apply_alternate_url')])
+                                      salary_to, point.get('apply_alternate_url')])
 
     def get_vacancies(self):
         req = requests.get('https://api.hh.ru/vacancies', {'text': self.name_vacancies})
@@ -77,8 +78,6 @@ class HHApi(ReqFromApi):
         for item in data['items']:
             items_list.append(item)
         return items_list
-
-
 
 
 class SJApi(ReqFromApi):
@@ -116,6 +115,7 @@ class SJApi(ReqFromApi):
             items_list.append(item)
         return items_list
 
+
 def read_file(file_name):
     i = 0
     with open(f"{file_name}", 'rt', encoding='utf-8') as r_file:
@@ -128,10 +128,6 @@ def read_file(file_name):
         numb_of_vacancy = int(input('Какую вакансию показать подробнее?\nДальше?"N"'))
         print(all_vacancies_copyes[numb_of_vacancy - 1])
 
-name = 'сварщик'
-copy = SJApi('abr', name)
-copy.get_vacancies()
-copy.make_file()
 
 all_vacancies_copyes = []
 
@@ -144,6 +140,7 @@ while True:
     if usr_inp.lower() == 'q':
         break
     usr_inp_file = f"{input('Имя файла лога')}.csv"
+    # это для полиморфизма
     copies_api_req.append(HHApi(usr_inp_file, usr_inp))
     copies_api_req.append(SJApi(usr_inp_file, usr_inp))
 
@@ -152,4 +149,3 @@ while True:
         copy.make_file()
 
     read_file(usr_inp_file)
-
