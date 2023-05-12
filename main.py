@@ -182,7 +182,7 @@ all_vacancies_copyes = []
 usr_inp = ''
 
 
-print('q - выйти\nКакую профессию ищем?:')
+print('q - выйти\nКакую профессию ищем?(Одно слово):')
 copies_api_req = []
 usr_inp = input()
 
