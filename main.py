@@ -25,15 +25,22 @@ class ReqFromApi(ABC):
 
 class CopyofVacancy(ABC):
 
-    def __init__(self, number, profession, city, salary_from, salary_to):
+    def __init__(self, number, profession, city, salary_from, salary_to, currency, link, address): #description):
         self.number = number
         self.profession = profession
         self.city = city
         self.salary_from = salary_from
         self.salary_to = salary_to
-
+        self.currency = currency
+        self.link = link
+        self.address = address
+        #self.description = description
     def __str__(self):
-        return f'{self.number} {self.profession} {self.city} {self.salary_from} {self.salary_to}'
+        return f'{self.number} {self.profession} {self.city} {self.salary_from} {self.salary_to} {self.currency}' \
+               f'\nСсылка на вакансию: {self.link} ' \
+               f'\nАдрес: {self.address}'
+               #f'Описание вакансии: {self.description}'
+               #f'\nАдрес: {self.address}'
     ###@classmethod
     ###def get_copy(cls):
     ###    return cls(copy.make_copy())
@@ -56,13 +63,16 @@ class HHApi(ReqFromApi):
                 if point.get('salary') is None:
                     salary_from = '--'
                     salary_to = '--'
+                    salary_currency = '--'
                 else:
                     salary_from = point.get('salary').get('from')
                     salary_to = point.get('salary').get('to')
+                    salary_currency = point.get('salary').get('currency')
+
 
                 file_writer.writerow([point.get('name'), point.get('area').get('name'), salary_from,
 
-                                      salary_to, point.get('apply_alternate_url')])
+                                      salary_to, salary_currency, point.get('url'), point.get('address')])
 
     def get_vacancies(self):
         req = requests.get('https://api.hh.ru/vacancies', {'text': self.name_vacancies})
@@ -74,9 +84,11 @@ class HHApi(ReqFromApi):
         data = json.loads(data)
 
         items_list = []
-
+        with open('hh_log.txt', 'wt')as file:
+            file.write(str(data))
         for item in data['items']:
             items_list.append(item)
+
         return items_list
 
 
@@ -97,7 +109,7 @@ class SJApi(ReqFromApi):
                 file_writer.writerow(
                     [point.get('profession'), point.get('town').get('title'), point.get("payment_from"),
 
-                     point.get('payment_to'), point.get('link')])
+                     point.get('payment_to'), point.get('currency'), point.get('link'), point.get('address')])
 
     def get_vacancies(self):
 
@@ -122,30 +134,39 @@ def read_file(file_name):
         content = csv.reader(r_file, delimiter=",")
         for line in content:
             i += 1
-            all_vacancies_copyes.append(CopyofVacancy(i, line[0], line[1], line[2], line[3]))
-            print(f"{i}) {line[0]}; {line[1]};от {line[2]} до {line[3]} ")
+            if i % 10 == 0:
+                numb_of_vacancy = int(input('Какую вакансию показать подробнее?\nДальше?"N"'))
+                print(all_vacancies_copyes[numb_of_vacancy - 1])
+                input('дальше')
 
-        numb_of_vacancy = int(input('Какую вакансию показать подробнее?\nДальше?"N"'))
-        print(all_vacancies_copyes[numb_of_vacancy - 1])
+            if line[4] is None:
+                line_4 = '--'
+            else:
+                line_4 = line[4]
+
+                #создаем копии
+            all_vacancies_copyes.append(CopyofVacancy(i, line[0], line[1], line[2], line[3], line_4, line[5], line[6]))
+            print(f"{i}) {line[0]}; {line[1]};от {line[2]} до {line[3]} {line[4]} ")
+
 
 
 all_vacancies_copyes = []
 
 usr_inp = ''
 
-while True:
-    print('q - выйти\nКакую профессию ищем?:')
-    copies_api_req = []
-    usr_inp = input()
-    if usr_inp.lower() == 'q':
-        break
-    usr_inp_file = f"{input('Имя файла лога')}.csv"
-    # это для полиморфизма
-    copies_api_req.append(HHApi(usr_inp_file, usr_inp))
-    copies_api_req.append(SJApi(usr_inp_file, usr_inp))
 
-    for copy in copies_api_req:
-        copy.get_vacancies()
-        copy.make_file()
+print('q - выйти\nКакую профессию ищем?:')
+copies_api_req = []
+usr_inp = input()
 
-    read_file(usr_inp_file)
+usr_inp_file = "log.csv"
+# это для полиморфизма
+copies_api_req.append(HHApi(usr_inp_file, usr_inp))
+copies_api_req.append(SJApi(usr_inp_file, usr_inp))
+
+for copy in copies_api_req:
+    copy.get_vacancies()
+    copy.make_file()
+
+
+read_file(usr_inp_file)
