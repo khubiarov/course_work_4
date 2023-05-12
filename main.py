@@ -25,7 +25,7 @@ class ReqFromApi(ABC):
 
 class CopyofVacancy(ABC):
 
-    def __init__(self, number, profession, city, salary_from, salary_to, currency, link, address): #description):
+    def __init__(self, number, profession, city, salary_from, salary_to, currency, link, address, email, description):
         self.number = number
         self.profession = profession
         self.city = city
@@ -34,12 +34,13 @@ class CopyofVacancy(ABC):
         self.currency = currency
         self.link = link
         self.address = address
-        #self.description = description
+        self.email = email
+        self.description = description
     def __str__(self):
-        return f'{self.number} {self.profession} {self.city} {self.salary_from} {self.salary_to} {self.currency}' \
+        return f'{self.number} {self.profession} {self.city} от {self.salary_from} до {self.salary_to} {self.currency}'\
                f'\nСсылка на вакансию: {self.link} ' \
-               f'\nАдрес: {self.address}'
-               #f'Описание вакансии: {self.description}'
+               f'\nАдрес: {self.address}\nE-mail:{self.email}'\
+               f'\nОписание вакансии: {self.description}'
                #f'\nАдрес: {self.address}'
     ###@classmethod
     ###def get_copy(cls):
@@ -69,10 +70,19 @@ class HHApi(ReqFromApi):
                     salary_to = point.get('salary').get('to')
                     salary_currency = point.get('salary').get('currency')
 
+                if point.get('address') is None:
+                    address = '--'
+                else:
+                    address = point.get('address').get('raw')
+                e_mail = '--'
 
+                if point.get('snippet') == None:
+                    description = '--'
+                else:
+                    description = point.get('snippet').get('requirement')
                 file_writer.writerow([point.get('name'), point.get('area').get('name'), salary_from,
 
-                                      salary_to, salary_currency, point.get('url'), point.get('address')])
+                                      salary_to, salary_currency, point.get('alternate_url'), address, e_mail, description])
 
     def get_vacancies(self):
         req = requests.get('https://api.hh.ru/vacancies', {'text': self.name_vacancies})
@@ -109,7 +119,8 @@ class SJApi(ReqFromApi):
                 file_writer.writerow(
                     [point.get('profession'), point.get('town').get('title'), point.get("payment_from"),
 
-                     point.get('payment_to'), point.get('currency'), point.get('link'), point.get('address')])
+                     point.get('payment_to'), point.get('currency'), point.get('link'), point.get('address'),
+                     point.get('email'), point.get('candidat')][0:100])
 
     def get_vacancies(self):
 
@@ -142,11 +153,12 @@ def read_file(file_name):
                     line_4 = line[4]
 
                 #создаем копии
-                all_vacancies_copyes.append(CopyofVacancy(i, line[0], line[1], line[2], line[3], line_4, line[5], line[6]))
+                all_vacancies_copyes.append(CopyofVacancy(i, line[0], line[1], line[2], line[3], line_4, line[5], line[6],
+                                                          line[7], line[8]))
                 print(f"{i}) {line[0]}; {line[1]};от {line[2]} до {line[3]} {line[4]} ")
 
                 if i % 10 == 0:
-                    numb_of_vacancy = input('Какую вакансию показать подробнее?\n"N" - Дальше\n"Q" - Выход\n')
+                    numb_of_vacancy = input('Какую вакансию показать подробнее?\nЦифра - номер позиции\n"N" - Дальше\n"Q" - Выход\n')
                     if numb_of_vacancy.isdigit():
                         if int(numb_of_vacancy) > i:
                             print('Ошибка , нет такой вакансии')
